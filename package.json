@@ -1,0 +1,38 @@
+{
+  "name": "admin-panel",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Generic admin panel application",
+  "scripts": {
+    "start": "ts-node ./src/server.ts",
+    "build": "tsc",
+    "test": "mocha -r ts-node/register tests/**/*.ts"
+  },
+  "author": "jeko2000",
+  "license": "ISC",
+  "dependencies": {
+    "fp-ts": "^2.11.1",
+    "validator": "^13.6.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.7.1",
+    "@types/validator": "^13.6.3",
+    "mocha": "^9.1.0",
+    "ts-mocha": "^8.0.0",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      ".git",
+      "node_modules",
+      "dist"
+    ],
+    "watch": [
+      "./src"
+    ],
+    "exec": "./node_modules/.bin/ts-node src/server.ts",
+    "ext": "ts"
+  }
+}
