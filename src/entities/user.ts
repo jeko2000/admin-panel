@@ -1,4 +1,4 @@
-import { EmailAddress, makeEmailAddress, makePasswordHash, makeUuid, Password, PasswordHash, Uuid } from "../types/types";
+import { EmailAddress, makeEmailAddress, makePasswordHash, Password, PasswordHash, UserId } from "../types/types";
 import * as E from 'fp-ts/Either';
 import { ValidationError } from "../types/errors";
 import { pipe } from "fp-ts/lib/function";
@@ -10,24 +10,23 @@ export interface UserRendition {
 
 export class User {
   protected constructor(
-    readonly userId: Uuid,
+    readonly userId: UserId,
     readonly emailAddress: EmailAddress,
     readonly passwordHash: PasswordHash,
     readonly createdAt: Date = new Date()
   ) { }
 
   public static of(
-    userId: Uuid,
+    userId: UserId,
     emailAddress: EmailAddress,
     passwordHash: PasswordHash,
     createdAt: Date = new Date()
   ): E.Either<ValidationError, User> {
     return pipe(
       E.Do,
-      E.bind('userId', () => makeUuid(userId)),
       E.bind('emailAddress', () => makeEmailAddress(emailAddress)),
       E.bind('passwordHash', () => makePasswordHash(passwordHash)),
-      E.map(({ userId, emailAddress, passwordHash }) => new User(
+      E.map(({ emailAddress, passwordHash }) => new User(
         userId, emailAddress, passwordHash, createdAt
       ))
     );

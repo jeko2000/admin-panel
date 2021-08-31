@@ -3,6 +3,8 @@ import { flow } from 'fp-ts/lib/function'
 import validator = require('validator')
 import { ValidationError } from './errors'
 
+export type UserId = number;
+
 export type NonEmptyString = string
 export const makeNonEmptyString = E.fromPredicate(
   (s: string) => s !== null && s !== undefined && s.length > 0,
