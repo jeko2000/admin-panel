@@ -3,3 +3,9 @@ export class ValidationError extends Error {
     super(`Validation error: ${message}`);
   }
 }
+
+export class DatabaseError extends Error {
+  constructor(message: string) {
+    super(`Database error: ${message}`);
+  }
+}

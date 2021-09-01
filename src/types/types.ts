@@ -4,6 +4,10 @@ import validator = require('validator')
 import { ValidationError } from './errors'
 
 export type UserId = number
+export const makeUserId = E.fromPredicate(
+  (n: number) => n > 1,
+  (n: number) => new ValidationError(`Value ${n} is invalid`)
+);
 
 export type NonEmptyString = string
 export const makeNonEmptyString = E.fromPredicate(
