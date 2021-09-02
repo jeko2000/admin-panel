@@ -2,13 +2,14 @@ import * as TE from 'fp-ts/TaskEither';
 import * as O from 'fp-ts/Option';
 import { pipe } from 'fp-ts/lib/function';
 import { dbClient, DbClient, ResultRow } from './dbClient';
-import { UserId } from '../types/types';
-import { makeUser, User } from '../entities/user';
-import { EmailAddress } from '../types/types';
+import { makeUser, User, UserRendition } from '../entities/user';
+import { hashPassword } from '../lib/fpUtil';
+import { DatabaseError } from '../types/errors';
 
 export interface UserRepository {
   findByUserId(userId: number): TE.TaskEither<Error, O.Option<User>>;
   findByEmailAddress(emailAddress: string): TE.TaskEither<Error, O.Option<User>>;
+  createUser(userRendition: UserRendition): TE.TaskEither<Error, User>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -32,6 +33,21 @@ class PostgresUserRepository implements UserRepository {
         [emailAddress]
       ),
       TE.map(O.chain(resultRowToMaybeUser))
+    )
+  }
+
+  createUser(userRendition: UserRendition): TE.TaskEither<Error, User> {
+    const { emailAddress, password } = userRendition;
+    return pipe(
+      hashPassword(password),
+      TE.chain(passwordHash => dbClient.querySingleWithParams(
+        'INSERT INTO users(email_address, password_hash) VALUES($1, $2) RETURNING *',
+        [emailAddress, passwordHash]
+      )),
+      TE.map(O.chain(resultRowToMaybeUser)),
+      TE.chain(TE.fromOption(
+        () => new DatabaseError(`Failed to collect User`),
+      ))
     )
   }
 }

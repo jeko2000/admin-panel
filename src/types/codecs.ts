@@ -54,7 +54,7 @@ export interface StringMin8Brand {
 }
 export const StringMin8 = t.brand(
   t.string,
-  (s: string): s is t.Branded<string, StringMin8Brand> => s.length <= 50,
+  (s: string): s is t.Branded<string, StringMin8Brand> => s.length >= 8,
   'StringMin8'
 )
 export type StringMin8 = t.TypeOf<typeof StringMin8>;
@@ -73,7 +73,3 @@ export const BcryptHash = t.brand(
   'BcryptHash'
 )
 export type BcryptHashBcryptHash = t.TypeOf<typeof BcryptHash>;
-
-interface TimestampBrand {
-  readonly Timestamp: unique symbol
-}

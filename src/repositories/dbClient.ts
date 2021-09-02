@@ -44,7 +44,12 @@ class PostgresDbClient implements DbClient {
   querySingleWithParams(sql: string, params: any[]): TE.TaskEither<DatabaseError, O.Option<ResultRow>> {
     return pipe(
       this.queryWithParams(sql, params),
-      TE.map(resultSet => O.tryCatch(resultSet.rows[0]))
+      TE.map(resultSet => {
+        if (resultSet.rowCount > 0) {
+          return O.of(resultSet.rows[0]);
+        }
+        return O.none;
+      })
     )
   }
   close(): TE.TaskEither<DatabaseError, void> {

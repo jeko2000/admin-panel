@@ -1,11 +1,11 @@
 import { Response } from 'express';
-import StatusCodes, { OK } from 'http-status-codes';
+import StatusCodes from 'http-status-codes';
 import * as O from 'fp-ts/lib/Option';
 import * as T from 'fp-ts/lib/Task';
 import { ValidationError } from '../types/errors';
 import { pipe } from 'fp-ts/lib/function';
 
-const { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND } = StatusCodes;
+const { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } = StatusCodes;
 
 type ResponseSpec = {
   status: number,
@@ -28,11 +28,18 @@ export function handleError(res: Response) {
   });
 }
 
-function handleNotFound(res: Response) {
+export function handleNotFound(res: Response) {
   return (): T.Task<void> => respond(res)({
     status: NOT_FOUND,
     body: { error: 'No such resource found' }
   });
+}
+
+export function handleOK(res: Response) {
+  return (body: any): T.Task<void> => respond(res)({
+    status: OK,
+    body
+  })
 }
 
 export function handleMaybe(res: Response) {
@@ -41,7 +48,8 @@ export function handleMaybe(res: Response) {
       maybe,
       O.fold(
         handleNotFound(res),
-        user => respond(res)({ status: OK, body: user }))
+        handleOK(res)
+      )
     );
   }
 }
