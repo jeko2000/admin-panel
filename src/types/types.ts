@@ -4,7 +4,7 @@ import * as tt from 'io-ts-types';
 import * as c from './codecs';
 
 export const UserId = withMessage(
-  c.PositiveInt,
+  t.union([c.PositiveInt, tt.IntFromString], 'UserId'),
   input => `Unable to parse user id from: ${input}`
 )
 export type UserId = t.TypeOf<typeof UserId>;
@@ -16,7 +16,7 @@ export const EmailAddress = withMessage(
 export type EmailAddress = t.TypeOf<typeof EmailAddress>;
 
 export const Password = withMessage(
-  t.intersection([c.StringMin8, c.NonEmptyString50]),
+  t.intersection([c.StringMin8, c.NonEmptyString50], 'Password'),
   () => `Passwords must have between 8 and 50 characters in length`
 )
 export type Password = t.TypeOf<typeof Password>;
@@ -28,7 +28,7 @@ export const PasswordHash = withMessage(
 export type PasswordHash = t.TypeOf<typeof PasswordHash>;
 
 export const CreatedAt = withMessage(
-  tt.date,
+  t.union([tt.date, tt.DateFromNumber, tt.DateFromISOString], 'CreatedAt'),
   input => `Unable to parse createdAt from: ${input}`
 )
 export type CreatedAt = t.TypeOf<typeof CreatedAt>;

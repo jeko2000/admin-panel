@@ -1,15 +1,18 @@
-import * as TE from 'fp-ts/TaskEither';
 import * as O from 'fp-ts/Option';
-import { pipe } from 'fp-ts/lib/function';
+import * as TE from 'fp-ts/TaskEither';
+import { DatabaseError, ValidationError } from '../types/errors';
+import { EmailAddress, UserId } from '../types/types';
 import { dbClient, DbClient, ResultRow } from './dbClient';
-import { makeUser, User, UserRendition } from '../entities/user';
 import { hashPassword } from '../lib/fpUtil';
-import { DatabaseError } from '../types/errors';
+import { makeUser, User, UserRendition } from '../entities/user';
+import { pipe } from 'fp-ts/lib/function';
 
 export interface UserRepository {
-  findByUserId(userId: number): TE.TaskEither<Error, O.Option<User>>;
-  findByEmailAddress(emailAddress: string): TE.TaskEither<Error, O.Option<User>>;
+  findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>>;
+  findByEmailAddress(emailAddress: EmailAddress): TE.TaskEither<Error, O.Option<User>>;
   createUser(userRendition: UserRendition): TE.TaskEither<Error, User>;
+  updateUser(user: User): TE.TaskEither<Error, User>;
+  deleteUser(userId: UserId): TE.TaskEither<Error, UserId>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -17,7 +20,7 @@ class PostgresUserRepository implements UserRepository {
     readonly dbClient: DbClient
   ) { }
 
-  findByUserId(userId: number): TE.TaskEither<Error, O.Option<User>> {
+  findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>> {
     return pipe(
       dbClient.querySingleWithParams(
         'SELECT * FROM users WHERE user_id = $1', [userId]
@@ -26,7 +29,7 @@ class PostgresUserRepository implements UserRepository {
     )
   }
 
-  findByEmailAddress(emailAddress: string): TE.TaskEither<Error, O.Option<User>> {
+  findByEmailAddress(emailAddress: EmailAddress): TE.TaskEither<Error, O.Option<User>> {
     return pipe(
       dbClient.querySingleWithParams(
         'SELECT * FROM users WHERE email_address = $1',
@@ -48,6 +51,33 @@ class PostgresUserRepository implements UserRepository {
       TE.chain(TE.fromOption(
         () => new DatabaseError(`Failed to collect User`),
       ))
+    )
+  }
+
+  updateUser(user: User): TE.TaskEither<Error, User> {
+    const { emailAddress, passwordHash, userId } = user;
+    return pipe(
+      dbClient.querySingleWithParams(
+        "UPDATE users SET email_address = $1, password_hash = $2 WHERE user_id = $3 RETURNING *",
+        [emailAddress, passwordHash, userId]
+      ),
+      TE.chain(TE.fromOption(
+        () => new ValidationError(`No such user found`)
+      )),
+      TE.map(_ => user)
+    );
+  }
+
+  deleteUser(userId: UserId): TE.TaskEither<Error, UserId> {
+    return pipe(
+      dbClient.querySingleWithParams(
+        "DELETE FROM users WHERE user_id = $1 RETURNING *",
+        [userId]
+      ),
+      TE.chain(TE.fromOption(
+        () => new ValidationError(`No such user found`)
+      )),
+      TE.map(_ => userId)
     )
   }
 }

@@ -1,5 +1,5 @@
-import * as TE  from "fp-ts/lib/TaskEither";
-import * as E  from "fp-ts/lib/Either";
+import * as TE from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
 import { Errors } from "io-ts";
 import { ValidationError } from "../types/errors";
 import { PasswordHash } from "../types/types";
@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import { flow, pipe } from "fp-ts/lib/function";
 
 const saltRounds = 10;
+
 export function toValidationError(errors: Errors): ValidationError {
   return new ValidationError(errors.map(err => err.message).join(','));
 }

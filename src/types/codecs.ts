@@ -17,7 +17,7 @@ export type PositiveNumber = t.TypeOf<typeof PositiveNumber>;
 /*
  * PositiveInt codec
  */
-export const PositiveInt = t.intersection([t.Int, PositiveNumber])
+export const PositiveInt = t.intersection([t.Int, PositiveNumber], 'PositiveInt')
 export type PositiveInt = t.TypeOf<typeof PositiveInt>;
 
 /*
