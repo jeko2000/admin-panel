@@ -1,34 +1,20 @@
-import { EmailAddress, makeEmailAddress, makePasswordHash, Password, PasswordHash, UserId } from "../types/types";
-import * as E from 'fp-ts/Either';
-import { ValidationError } from "../types/errors";
-import { pipe } from "fp-ts/lib/function";
+import { CreatedAt, EmailAddress, Password, PasswordHash, UserId } from "../types/types";
+import * as t from 'io-ts';
 
-export interface UserRendition {
+export const UserRendition = t.type({
   emailAddress: EmailAddress,
   password: Password
-}
+});
+export type UserRendition = t.TypeOf<typeof UserRendition>;
 
-export class User {
-  protected constructor(
-    readonly userId: UserId,
-    readonly emailAddress: EmailAddress,
-    readonly passwordHash: PasswordHash,
-    readonly createdAt: Date = new Date()
-  ) { }
+export const User = t.strict({
+  userId: UserId,
+  emailAddress: EmailAddress,
+  passwordHash: PasswordHash,
+  createdAt: CreatedAt
+});
+export type User = t.TypeOf<typeof User>;
 
-  public static of(
-    userId: UserId,
-    emailAddress: EmailAddress,
-    passwordHash: PasswordHash,
-    createdAt: Date = new Date()
-  ): E.Either<ValidationError, User> {
-    return pipe(
-      E.Do,
-      E.bind('emailAddress', () => makeEmailAddress(emailAddress)),
-      E.bind('passwordHash', () => makePasswordHash(passwordHash)),
-      E.map(({ emailAddress, passwordHash }) => new User(
-        userId, emailAddress, passwordHash, createdAt
-      ))
-    );
-  }
+export function makeUser(userId: number, emailAddress: string, passwordHash: string, createdAt: Date) {
+  return User.decode({ userId, emailAddress, passwordHash, createdAt });
 }

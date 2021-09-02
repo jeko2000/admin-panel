@@ -1,66 +1,34 @@
-import * as E from 'fp-ts/Either'
-import { flow } from 'fp-ts/lib/function'
-import validator = require('validator')
-import { ValidationError } from './errors'
+import { withMessage } from 'io-ts-types/lib/withMessage'
+import * as t from 'io-ts';
+import * as tt from 'io-ts-types';
+import * as c from './codecs';
 
-export type UserId = number
-export const makeUserId = E.fromPredicate(
-  (n: number) => n > 1,
-  (n: number) => new ValidationError(`Value ${n} is invalid`)
-);
-
-export type NonEmptyString = string
-export const makeNonEmptyString = E.fromPredicate(
-  (s: string) => s !== null && s !== undefined && s.length > 0,
-  (s: string) => new ValidationError(`Value ${s} has no content`)
+export const UserId = withMessage(
+  c.PositiveInt,
+  input => `Unable to parse user id from: ${input}`
 )
+export type UserId = t.TypeOf<typeof UserId>;
 
-export type NonEmptyString50 = string
-export const makeNonEmptyString50 = flow(
-  makeNonEmptyString,
-  E.chain(E.fromPredicate(
-    (s: string) => s.length <= 50,
-    (s: string) => new ValidationError(`Value of length ${s.length} is too long`)
-  ))
+export const EmailAddress = withMessage(
+  c.EmailAddress,
+  input => `Unable to parse email address from: ${input}`
 )
+export type EmailAddress = t.TypeOf<typeof EmailAddress>;
 
-export type Uuid = string
-export const makeUuid = flow(
-  makeNonEmptyString,
-  E.chain(E.fromPredicate(
-    validator.default.isUUID,
-    (s: string) => new ValidationError(`Value ${s} is not a valid UUID`)
-  ))
+export const Password = withMessage(
+  t.intersection([c.StringMin8, c.NonEmptyString50]),
+  () => `Passwords must have between 8 and 50 characters in length`
 )
+export type Password = t.TypeOf<typeof Password>;
 
-export type EmailAddress = string
-export const makeEmailAddress = flow(
-  makeNonEmptyString,
-  E.chain(E.fromPredicate(
-    validator.default.isEmail,
-    (s: string) => new ValidationError(`Value ${s} is not a valid email address`)
-  ))
+export const PasswordHash = withMessage(
+  c.BcryptHash,
+  () => `Unable to validate provided password hash`
 )
+export type PasswordHash = t.TypeOf<typeof PasswordHash>;
 
-export type Password = string
-export const makePassword = flow(
-  makeNonEmptyString,
-  E.chain(E.fromPredicate(
-    (s: string) => s.length > 8,
-    (s: string) => new ValidationError(`Password of length ${s.length} is too short`)
-  )),
-  E.chain(E.fromPredicate(
-    (s: string) => s.length < 64,
-    (s: string) => new ValidationError(`Password of length ${s.length} is too long`)
-  ))
+export const CreatedAt = withMessage(
+  tt.date,
+  input => `Unable to parse createdAt from: ${input}`
 )
-
-export type PasswordHash = string
-export const makePasswordHash = flow(
-  makeNonEmptyString,
-  E.chain(E.fromPredicate(
-    // TODO: Improve password hash refinement
-    (s: string) => s.length === 60,
-    (s: string) => new ValidationError(`Value ${s} does not appear to be a password hash`)
-  ))
-)
+export type CreatedAt = t.TypeOf<typeof CreatedAt>;

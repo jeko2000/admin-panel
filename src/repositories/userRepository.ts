@@ -1,12 +1,13 @@
 import * as TE from 'fp-ts/TaskEither';
 import * as O from 'fp-ts/Option';
 import { pipe } from 'fp-ts/lib/function';
-import { User } from '../entities/user';
-import { UserId } from "../types/types";
 import { dbClient, DbClient, ResultRow } from './dbClient';
+import { UserId } from '../types/types';
+import { makeUser, User } from '../entities/user';
+import { EmailAddress } from '../types/types';
 
 export interface UserRepository {
-  findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>>;
+  findByUserId(userId: number): TE.TaskEither<Error, O.Option<User>>;
   findByEmailAddress(emailAddress: string): TE.TaskEither<Error, O.Option<User>>;
 }
 
@@ -36,7 +37,7 @@ class PostgresUserRepository implements UserRepository {
 }
 
 function resultRowToMaybeUser(rr: ResultRow) {
-  return O.fromEither(User.of(
+  return O.fromEither(makeUser(
     rr.user_id,
     rr.email_address,
     rr.password_hash,
