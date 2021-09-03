@@ -3,7 +3,7 @@ import * as TE from 'fp-ts/TaskEither';
 import logger from '../../lib/logger';
 import { EmailAddress, UserId } from '../../types/types';
 import { Router, Request, Response } from 'express';
-import { User, UserRendition } from '../../entities/user';
+import { User, NewUserRendition } from '../../entities/user';
 import { ValidationError } from '../../types/errors';
 import { handleError, handleMaybe, handleOK } from '../../lib/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
@@ -12,11 +12,22 @@ import { userRepository } from '../../repositories/userRepository';
 
 const userRouter = Router();
 
+userRouter.get('/', getAllUsers);
 userRouter.get('/:userId', getUserByUserId);
 userRouter.get('/:emailAddress', getUserByEmailAddress);
 userRouter.post('/', createUser);
 userRouter.put('/:userId', updateUser);
 userRouter.delete('/:userId', deleteUser);
+
+function getAllUsers(req: Request, res: Response): Promise<void> {
+  logger.info(`Attempting to get all users`);
+  return pipe(
+    userRepository.findAllUsers(),
+    TE.map(users => ({ users })),
+    TE.fold(handleError(res), handleOK(res)),
+    invoke => invoke()
+  )
+}
 
 function getUserByUserId(req: Request, res: Response): Promise<void> {
   const { userId } = req.params;
@@ -47,7 +58,7 @@ function getUserByEmailAddress(req: Request, res: Response): Promise<void> {
 function createUser(req: Request, res: Response): Promise<void> {
   logger.info(`Attempting to create new user with email address: '${req.body.emailAddress}'`);
   return pipe(
-    UserRendition.decode(req.body),
+    NewUserRendition.decode(req.body),
     E.mapLeft(toValidationError),
     TE.fromEither,
     TE.chain(userRepository.createUser),
@@ -84,7 +95,7 @@ function deleteUser(req: Request, res: Response): Promise<void> {
     E.mapLeft(toValidationError),
     TE.fromEither,
     TE.chain(userRepository.deleteUser),
-    TE.map(userId => ({userId})),
+    TE.map(userId => ({ userId })),
     TE.fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )

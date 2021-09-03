@@ -1,0 +1,5 @@
+* Admin panel
+
+This is a small, self-contained express application that serves as a
+platform for experimentation with typed functional programming via
+[[https://github.com/gcanti][Giulio Canti]]'s exceptional [[https://github.com/gcanti/fp-ts][fp-ts]] Typescript library.

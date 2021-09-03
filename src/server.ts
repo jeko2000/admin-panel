@@ -1,8 +1,8 @@
 import apiRouter from './routes/api';
 import express from 'express';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import logger from './lib/logger';
+import morgan from 'morgan';
 
 const app = express();
 app.use(express.json());

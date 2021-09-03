@@ -1,8 +1,8 @@
-import { pipe } from 'fp-ts/lib/function';
 import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import * as pg from 'pg';
 import { DatabaseError } from '../types/errors';
+import { pipe } from 'fp-ts/lib/function';
 
 export interface ResultRow {
   [column: string]: any;

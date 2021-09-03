@@ -1,16 +1,18 @@
+import * as A from 'fp-ts/Array';
 import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import { DatabaseError, ValidationError } from '../types/errors';
 import { EmailAddress, UserId } from '../types/types';
 import { dbClient, DbClient, ResultRow } from './dbClient';
 import { hashPassword } from '../lib/fpUtil';
-import { makeUser, User, UserRendition } from '../entities/user';
-import { pipe } from 'fp-ts/lib/function';
+import { makeUser, User, NewUserRendition } from '../entities/user';
+import { flow, pipe } from 'fp-ts/lib/function';
 
 export interface UserRepository {
+  findAllUsers(): TE.TaskEither<Error, Array<User>>;
   findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>>;
   findByEmailAddress(emailAddress: EmailAddress): TE.TaskEither<Error, O.Option<User>>;
-  createUser(userRendition: UserRendition): TE.TaskEither<Error, User>;
+  createUser(newUserRendition: NewUserRendition): TE.TaskEither<Error, User>;
   updateUser(user: User): TE.TaskEither<Error, User>;
   deleteUser(userId: UserId): TE.TaskEither<Error, UserId>;
 }
@@ -20,6 +22,13 @@ class PostgresUserRepository implements UserRepository {
     readonly dbClient: DbClient
   ) { }
 
+  findAllUsers(): TE.TaskEither<Error, Array<User>> {
+    return pipe(
+      dbClient.query('SELECT * FROM users'),
+      TE.map(resultSet => resultSet.rows),
+      TE.map(flow(A.map(resultRowToMaybeUser), A.compact))
+    )
+  }
   findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>> {
     return pipe(
       dbClient.querySingleWithParams(
@@ -39,8 +48,8 @@ class PostgresUserRepository implements UserRepository {
     )
   }
 
-  createUser(userRendition: UserRendition): TE.TaskEither<Error, User> {
-    const { emailAddress, password } = userRendition;
+  createUser(newUserRendition: NewUserRendition): TE.TaskEither<Error, User> {
+    const { emailAddress, password } = newUserRendition;
     return pipe(
       hashPassword(password),
       TE.chain(passwordHash => dbClient.querySingleWithParams(

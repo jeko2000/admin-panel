@@ -1,7 +1,7 @@
-import { withMessage } from 'io-ts-types/lib/withMessage'
+import * as c from './codecs';
 import * as t from 'io-ts';
 import * as tt from 'io-ts-types';
-import * as c from './codecs';
+import { withMessage } from 'io-ts-types/lib/withMessage'
 
 export const UserId = withMessage(
   t.union([c.PositiveInt, tt.IntFromString], 'UserId'),

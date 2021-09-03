@@ -1,7 +1,7 @@
-import { Response } from 'express';
-import StatusCodes from 'http-status-codes';
 import * as O from 'fp-ts/lib/Option';
 import * as T from 'fp-ts/lib/Task';
+import StatusCodes from 'http-status-codes';
+import { Response } from 'express';
 import { ValidationError } from '../types/errors';
 import { pipe } from 'fp-ts/lib/function';
 
