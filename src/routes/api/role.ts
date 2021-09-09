@@ -1,12 +1,12 @@
 import * as E from 'fp-ts/Either';
 import * as TE from 'fp-ts/TaskEither';
-import logger from '../../lib/logger';
+import logger from '../../services/logger';
 import { RoleName } from '../../entities/role';
 import { Router, Request, Response } from 'express';
-import { handleError, handleMaybe, handleOK } from '../../lib/httpUtil';
+import { handleError, handleMaybe, handleOK } from '../../util/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
 import { roleRepository } from '../../repositories/roleRepository';
-import { toValidationError } from '../../lib/fpUtil';
+import { toValidationError } from '../../util/fpUtil';
 
 const roleRouter = Router();
 

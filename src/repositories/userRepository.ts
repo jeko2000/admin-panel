@@ -7,7 +7,7 @@ import { NewUserRendition } from '../types/renditions';
 import { User, UserId } from '../entities/user';
 import { dbClient, DbClient, ResultRow } from './dbClient';
 import { flow, pipe } from 'fp-ts/lib/function';
-import { hashPassword } from '../lib/fpUtil';
+import { hashPassword } from '../util/fpUtil';
 
 export interface UserRepository {
   findAllUsers(): TE.TaskEither<Error, Array<User>>;

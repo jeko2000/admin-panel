@@ -1,13 +1,13 @@
 import * as E from 'fp-ts/Either';
 import * as TE from 'fp-ts/TaskEither';
-import logger from '../../lib/logger';
+import logger from '../../services/logger';
 import { EmailAddress } from '../../types/types';
 import { Router, Request, Response } from 'express';
 import { User, UserId } from '../../entities/user';
 import { ValidationError } from '../../types/errors';
-import { handleError, handleMaybe, handleOK } from '../../lib/httpUtil';
+import { handleError, handleMaybe, handleOK } from '../../util/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
-import { toValidationError } from '../../lib/fpUtil';
+import { toValidationError } from '../../util/fpUtil';
 import { userRepository } from '../../repositories/userRepository';
 import { NewUserRendition } from '../../types/renditions';
 
