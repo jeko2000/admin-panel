@@ -2,17 +2,18 @@ import * as A from 'fp-ts/Array';
 import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import { DatabaseError, ValidationError } from '../types/errors';
-import { EmailAddress, UserId } from '../types/types';
+import { EmailAddress } from '../types/types';
+import { NewUserRendition } from '../types/renditions';
+import { User, UserId } from '../entities/user';
 import { dbClient, DbClient, ResultRow } from './dbClient';
-import { hashPassword } from '../lib/fpUtil';
-import { makeUser, User, NewUserRendition } from '../entities/user';
 import { flow, pipe } from 'fp-ts/lib/function';
+import { hashPassword } from '../lib/fpUtil';
 
 export interface UserRepository {
   findAllUsers(): TE.TaskEither<Error, Array<User>>;
   findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>>;
   findByEmailAddress(emailAddress: EmailAddress): TE.TaskEither<Error, O.Option<User>>;
-  createUser(newUserRendition: NewUserRendition): TE.TaskEither<Error, User>;
+  createUser(newUserRendition: NewUserRendition): TE.TaskEither<Error, UserId>;
   updateUser(user: User): TE.TaskEither<Error, User>;
   deleteUser(userId: UserId): TE.TaskEither<Error, UserId>;
 }
@@ -24,7 +25,7 @@ class PostgresUserRepository implements UserRepository {
 
   findAllUsers(): TE.TaskEither<Error, Array<User>> {
     return pipe(
-      dbClient.query('SELECT * FROM users'),
+      dbClient.query('SELECT * FROM get_all_users()'),
       TE.map(resultSet => resultSet.rows),
       TE.map(flow(A.map(resultRowToMaybeUser), A.compact))
     )
@@ -48,18 +49,17 @@ class PostgresUserRepository implements UserRepository {
     )
   }
 
-  createUser(newUserRendition: NewUserRendition): TE.TaskEither<Error, User> {
+  createUser(newUserRendition: NewUserRendition): TE.TaskEither<Error, UserId> {
     const { emailAddress, password } = newUserRendition;
     return pipe(
       hashPassword(password),
       TE.chain(passwordHash => dbClient.querySingleWithParams(
-        'INSERT INTO users(email_address, password_hash) VALUES($1, $2) RETURNING *',
-        [emailAddress, passwordHash]
+        'SELECT create_user($1, $2) AS user_id', [emailAddress, passwordHash]
       )),
-      TE.map(O.chain(resultRowToMaybeUser)),
       TE.chain(TE.fromOption(
         () => new DatabaseError(`Failed to collect User`),
-      ))
+      )),
+      TE.map(rr => rr.user_id)
     )
   }
 
@@ -92,12 +92,14 @@ class PostgresUserRepository implements UserRepository {
 }
 
 function resultRowToMaybeUser(rr: ResultRow) {
-  return O.fromEither(makeUser(
-    rr.user_id,
-    rr.email_address,
-    rr.password_hash,
-    rr.created_at
-  ));
+  const roleNames: Array<string> = rr.role_names.split(',');
+  return O.fromEither(User.decode({
+    userId: rr.user_id,
+    emailAddress: rr.email_address,
+    passwordHash: rr.password_hash,
+    roleNames,
+    createdAt: rr.created_at
+  }));
 }
 
 export const userRepository = new PostgresUserRepository(dbClient);

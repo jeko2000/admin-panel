@@ -1,14 +1,15 @@
 import * as E from 'fp-ts/Either';
 import * as TE from 'fp-ts/TaskEither';
 import logger from '../../lib/logger';
-import { EmailAddress, UserId } from '../../types/types';
+import { EmailAddress } from '../../types/types';
 import { Router, Request, Response } from 'express';
-import { User, NewUserRendition } from '../../entities/user';
+import { User, UserId } from '../../entities/user';
 import { ValidationError } from '../../types/errors';
 import { handleError, handleMaybe, handleOK } from '../../lib/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
 import { toValidationError } from '../../lib/fpUtil';
 import { userRepository } from '../../repositories/userRepository';
+import { NewUserRendition } from '../../types/renditions';
 
 const userRouter = Router();
 
@@ -41,7 +42,6 @@ function getUserByUserId(req: Request, res: Response): Promise<void> {
     invoke => invoke()
   )
 }
-
 function getUserByEmailAddress(req: Request, res: Response): Promise<void> {
   const { emailAddress } = req.params;
   logger.info(`Attempting to get user by email address: '${emailAddress}'`);
@@ -62,6 +62,7 @@ function createUser(req: Request, res: Response): Promise<void> {
     E.mapLeft(toValidationError),
     TE.fromEither,
     TE.chain(userRepository.createUser),
+    TE.map(userId => ({ userId })),
     TE.fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )

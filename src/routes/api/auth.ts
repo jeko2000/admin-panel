@@ -1,12 +1,13 @@
-import * as E from 'fp-ts/Either'
-import * as TE from 'fp-ts/TaskEither'
-import { LoginRendition, User } from '../../entities/user';
+import * as E from 'fp-ts/Either';
+import * as TE from 'fp-ts/TaskEither';
 import { Router, Request, Response, NextFunction } from 'express';
 import { ValidationError } from '../../types/errors';
 import { handleError, handleOK } from '../../lib/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
 import { toValidationError, validatePassword } from '../../lib/fpUtil';
 import { userRepository } from '../../repositories/userRepository';
+import { LoginRendition } from '../../types/renditions';
+import { User } from '../../entities/user';
 
 const authRouter = Router();
 authRouter.post('/login', loginUser);

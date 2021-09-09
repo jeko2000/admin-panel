@@ -21,17 +21,17 @@ export const PositiveInt = t.intersection([t.Int, PositiveNumber], 'PositiveInt'
 export type PositiveInt = t.TypeOf<typeof PositiveInt>;
 
 /*
- * EmailAddress codec
+ * Email codec
  */
-export interface EmailAddressBrand {
-  readonly EmailAddress: unique symbol
+export interface EmailBrand {
+  readonly Email: unique symbol
 }
-export const EmailAddress = t.brand(
+export const Email = t.brand(
   t.string,
-  (s: string): s is t.Branded<string, EmailAddressBrand> => validator.isEmail(s),
-  'EmailAddress'
+  (s: string): s is t.Branded<string, EmailBrand> => validator.isEmail(s),
+  'Email'
 )
-export type EmailAddress = t.TypeOf<typeof EmailAddress>;
+export type Email = t.TypeOf<typeof Email>;
 
 /*
  * NonEmptyString50 codec

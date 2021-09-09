@@ -1,26 +1,20 @@
 import * as t from 'io-ts';
-import { CreatedAt, EmailAddress, Password, PasswordHash, UserId } from "../types/types";
+import * as tt from 'io-ts-types';
+import { withMessage } from 'io-ts-types';
+import { EmailAddress, NumericId, PasswordHash, Timestamp } from "../types/types";
+import { RoleName } from './role';
 
-export const LoginRendition = t.type({
-  emailAddress: EmailAddress,
-  password: Password
-}, 'LoginRendition');
-export type LoginRendition = t.TypeOf<typeof LoginRendition>;
+export const UserId = withMessage(
+  NumericId,
+  input => `Unable to parse user id from: ${input}`
+)
+export type UserId = t.TypeOf<typeof UserId>;
 
-export const NewUserRendition = t.type({
-  emailAddress: EmailAddress,
-  password: Password
-}, 'NewUserRendition');
-export type NewUserRendition = t.TypeOf<typeof NewUserRendition>;
-
-export const User = t.strict({
+export const User = t.type({
   userId: UserId,
   emailAddress: EmailAddress,
   passwordHash: PasswordHash,
-  createdAt: CreatedAt
+  roleNames: tt.nonEmptyArray(RoleName),
+  createdAt: Timestamp,
 }, 'User');
 export type User = t.TypeOf<typeof User>;
-
-export function makeUser(userId: number, emailAddress: string, passwordHash: string, createdAt: Date) {
-  return User.decode({ userId, emailAddress, passwordHash, createdAt });
-}
