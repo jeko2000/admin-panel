@@ -1,4 +1,7 @@
 import * as winston from 'winston';
+import { config } from './config';
+
+const DEFAULT_LOGGER_LEVER = 'debug';
 
 const levels = {
   error: 0,
@@ -22,11 +25,13 @@ const transports = [
   })
 ]
 
+const level = config.getOrElse('logger.level', DEFAULT_LOGGER_LEVER);
+
 export const logger = winston.createLogger({
-  level: 'debug',
+  level,
   levels,
   format,
   transports
-})
+});
 
 export default logger;
