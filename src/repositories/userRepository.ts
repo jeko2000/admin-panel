@@ -3,8 +3,8 @@ import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import { DatabaseError, ValidationError } from '../types/errors';
 import { EmailAddress } from '../types/types';
-import { NewUserRendition } from '../types/renditions';
-import { User, UserId } from '../entities/user';
+import { NewUserRendition, RegistrationRendition } from '../types/renditions';
+import { RegistrationId, User, UserId } from '../entities/user';
 import { dbClient, DbClient, ResultRow } from './dbClient';
 import { flow, pipe } from 'fp-ts/lib/function';
 import { hashPassword } from '../util/fpUtil';
@@ -16,6 +16,8 @@ export interface UserRepository {
   createUser(newUserRendition: NewUserRendition): TE.TaskEither<Error, UserId>;
   updateUser(user: User): TE.TaskEither<Error, User>;
   deleteUser(userId: UserId): TE.TaskEither<Error, UserId>;
+  registerUser(registrationRendition: RegistrationRendition): TE.TaskEither<Error, RegistrationId>;
+  confirmUserRegistration(registrationId: RegistrationId): TE.TaskEither<Error, UserId>;
 }
 
 class PostgresUserRepository implements UserRepository {
@@ -33,7 +35,7 @@ class PostgresUserRepository implements UserRepository {
   findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>> {
     return pipe(
       dbClient.querySingleWithParams(
-        'SELECT * FROM users WHERE user_id = $1', [userId]
+        'SELECT * FROM get_user_by_user_id($1)', [userId]
       ),
       TE.map(O.chain(resultRowToMaybeUser))
     )
@@ -42,8 +44,7 @@ class PostgresUserRepository implements UserRepository {
   findByEmailAddress(emailAddress: EmailAddress): TE.TaskEither<Error, O.Option<User>> {
     return pipe(
       dbClient.querySingleWithParams(
-        'SELECT * FROM users WHERE email_address = $1',
-        [emailAddress]
+        'SELECT * FROM get_user_by_email_address($1)', [emailAddress]
       ),
       TE.map(O.chain(resultRowToMaybeUser))
     )
@@ -87,6 +88,32 @@ class PostgresUserRepository implements UserRepository {
         () => new ValidationError(`No such user found`)
       )),
       TE.map(_ => userId)
+    )
+  }
+  registerUser(registrationRendition: RegistrationRendition): TE.TaskEither<Error, RegistrationId> {
+    const { emailAddress, password } = registrationRendition;
+
+    return pipe(
+      hashPassword(password),
+      TE.chain(passwordHash => dbClient.querySingleWithParams(
+        "SELECT create_user_registration($1, $2) AS registration_id", [emailAddress, passwordHash]
+      )),
+      TE.chain(TE.fromOption(
+        () => new ValidationError(`No such resource found`)
+      )),
+      TE.map(rr => rr.registration_id)
+    )
+  }
+
+  confirmUserRegistration(registrationId: RegistrationId): TE.TaskEither<Error, UserId> {
+    return pipe(
+      dbClient.querySingleWithParams(
+        "SELECT confirm_user_registration($1) AS user_id", [registrationId]
+      ),
+      TE.chain(TE.fromOption(
+        () => new ValidationError(`No such resource found`)
+      )),
+      TE.map(rr => rr.user_id)
     )
   }
 }

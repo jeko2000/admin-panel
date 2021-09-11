@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import * as tt from 'io-ts-types';
 import { withMessage } from 'io-ts-types';
-import { EmailAddress, NumericId, PasswordHash, Timestamp } from "../types/types";
+import { EmailAddress, NumericId, PasswordHash, Timestamp, Uuid } from "../types/types";
 import { RoleName } from './role';
 
 export const UserId = withMessage(
@@ -18,3 +18,9 @@ export const User = t.type({
   createdAt: Timestamp,
 }, 'User');
 export type User = t.TypeOf<typeof User>;
+
+export const RegistrationId = withMessage(
+  Uuid,
+  input => `Unable to parse user id from: ${input}`
+)
+export type RegistrationId = t.TypeOf<typeof RegistrationId>;

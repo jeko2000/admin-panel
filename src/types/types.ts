@@ -32,3 +32,9 @@ export const Timestamp = withMessage(
   input => `Unable to parse timestamp from: ${input}`
 )
 export type Timestamp = t.TypeOf<typeof Timestamp>;
+
+export const Uuid = withMessage(
+  tt.UUID,
+  input => `Unable to parse UUID from: ${input}`
+)
+export type Uuid = t.TypeOf<typeof Uuid>;

@@ -3,22 +3,23 @@ import * as TE from 'fp-ts/TaskEither';
 import logger from '../../services/logger';
 import { EmailAddress } from '../../types/types';
 import { Router, Request, Response } from 'express';
-import { User, UserId } from '../../entities/user';
+import { RegistrationId, User, UserId } from '../../entities/user';
 import { ValidationError } from '../../types/errors';
 import { handleError, handleMaybe, handleOK } from '../../util/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
 import { toValidationError } from '../../util/fpUtil';
 import { userRepository } from '../../repositories/userRepository';
-import { NewUserRendition } from '../../types/renditions';
+import { NewUserRendition, RegistrationRendition } from '../../types/renditions';
 
 const userRouter = Router();
 
 userRouter.get('/', getAllUsers);
 userRouter.get('/:userId', getUserByUserId);
-userRouter.get('/:emailAddress', getUserByEmailAddress);
 userRouter.post('/', createUser);
 userRouter.put('/:userId', updateUser);
 userRouter.delete('/:userId', deleteUser);
+userRouter.post('/registrations', registerUser);
+userRouter.post('/registrations/confirm', confirmUserRegistration);
 
 function getAllUsers(req: Request, res: Response): Promise<void> {
   logger.info(`Attempting to get all users`);
@@ -38,18 +39,6 @@ function getUserByUserId(req: Request, res: Response): Promise<void> {
     E.mapLeft(toValidationError),
     TE.fromEither,
     TE.chain(userRepository.findByUserId),
-    TE.fold(handleError(res), handleMaybe(res)),
-    invoke => invoke()
-  )
-}
-function getUserByEmailAddress(req: Request, res: Response): Promise<void> {
-  const { emailAddress } = req.params;
-  logger.info(`Attempting to get user by email address: '${emailAddress}'`);
-  return pipe(
-    EmailAddress.decode(emailAddress),
-    E.mapLeft(toValidationError),
-    TE.fromEither,
-    TE.chain(userRepository.findByEmailAddress),
     TE.fold(handleError(res), handleMaybe(res)),
     invoke => invoke()
   )
@@ -96,6 +85,33 @@ function deleteUser(req: Request, res: Response): Promise<void> {
     E.mapLeft(toValidationError),
     TE.fromEither,
     TE.chain(userRepository.deleteUser),
+    TE.map(userId => ({ userId })),
+    TE.fold(handleError(res), handleOK(res)),
+    invoke => invoke()
+  )
+}
+
+function registerUser(req: Request, res: Response): Promise<void> {
+  logger.info(`Attempting to register user with email address: '${req.body.emailAddress}'`);
+  return pipe(
+    RegistrationRendition.decode(req.body),
+    E.mapLeft(toValidationError),
+    TE.fromEither,
+    TE.chain(userRepository.registerUser),
+    TE.map(registrationId => ({ registrationId })),
+    TE.fold(handleError(res), handleOK(res)),
+    invoke => invoke()
+  )
+}
+
+function confirmUserRegistration(req: Request, res: Response): Promise<void> {
+  const { registrationId } = req.body;
+  logger.info(`Attempting to confirm user registration user with registration id '${registrationId}'`);
+  return pipe(
+    RegistrationId.decode(registrationId),
+    E.mapLeft(toValidationError),
+    TE.fromEither,
+    TE.chain(userRepository.confirmUserRegistration),
     TE.map(userId => ({ userId })),
     TE.fold(handleError(res), handleOK(res)),
     invoke => invoke()

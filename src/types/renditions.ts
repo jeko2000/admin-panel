@@ -12,3 +12,9 @@ export const NewUserRendition = t.type({
   password: Password
 }, 'NewUserRendition');
 export type NewUserRendition = t.TypeOf<typeof NewUserRendition>;
+
+export const RegistrationRendition = t.type({
+  emailAddress: EmailAddress,
+  password: Password
+}, 'RegistrationRendition');
+export type RegistrationRendition = t.TypeOf<typeof RegistrationRendition>;
