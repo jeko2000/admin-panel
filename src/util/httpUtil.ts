@@ -20,7 +20,7 @@ export function respond(res: Response) {
 }
 
 export function handleError(res: Response) {
-  return (error: Error) => respond(res)({
+  return (error: Error): T.Task<void> => respond(res)({
     status: (error instanceof ValidationError
       ? BAD_REQUEST
       : INTERNAL_SERVER_ERROR),
@@ -36,7 +36,7 @@ export function handleNotFound(res: Response) {
 }
 
 export function handleOK(res: Response) {
-  return (body: any): T.Task<void> => respond(res)({
+  return (body: Record<string, any>): T.Task<void> => respond(res)({
     status: OK,
     body
   })

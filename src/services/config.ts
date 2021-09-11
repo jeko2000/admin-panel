@@ -39,11 +39,11 @@ export class Config {
     readonly store: ConfigStore
   ) { }
 
-  public static of(store: ConfigStore) {
+  public static of(store: ConfigStore): Config {
     return new Config(store);
   }
 
-  public static fromRetriever(retriever: ConfigRetriever) {
+  public static fromRetriever(retriever: ConfigRetriever): Config {
     return pipe(
       retriever.getConfig(),
       E.getOrElse(err => {

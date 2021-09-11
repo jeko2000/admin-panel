@@ -7,6 +7,8 @@
     "start": "ts-node ./src/server.ts",
     "start:dev": "nodemon",
     "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "format": "eslint src/**/*.ts --fix",
     "test": "mocha -r ts-node/register tests/**/*.ts"
   },
   "author": "jeko2000",
@@ -29,6 +31,9 @@
     "@types/node": "^16.7.1",
     "@types/pg": "^8.6.1",
     "@types/validator": "^13.6.3",
+    "@typescript-eslint/eslint-plugin": "^4.31.0",
+    "@typescript-eslint/parser": "^4.31.0",
+    "eslint": "^7.32.0",
     "fp-ts": "^2.11.1",
     "io-ts": "^2.2.16",
     "io-ts-types": "^0.5.16",
@@ -45,7 +50,8 @@
       "dist"
     ],
     "watch": [
-      "./src"
+      "./src",
+      "./config"
     ],
     "exec": "./node_modules/.bin/ts-node src",
     "ext": "ts"
