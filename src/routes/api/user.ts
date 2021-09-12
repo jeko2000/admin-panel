@@ -1,15 +1,13 @@
-import * as E from 'fp-ts/Either';
-import * as TE from 'fp-ts/TaskEither';
 import logger from '../../services/logger';
-import { EmailAddress } from '../../types/types';
-import { Router, Request, Response } from 'express';
+import { NewUserRendition, RegistrationRendition } from '../../types/renditions';
 import { RegistrationId, User, UserId } from '../../entities/user';
+import { Router, Request, Response } from 'express';
 import { ValidationError } from '../../types/errors';
+import { decodeTypeT } from '../../util/fpUtil';
+import { bind, chain, Do, filterOrElse, fold, map } from 'fp-ts/lib/TaskEither';
 import { handleError, handleMaybe, handleOK } from '../../util/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
-import { toValidationError } from '../../util/fpUtil';
 import { userRepository } from '../../repositories/userRepository';
-import { NewUserRendition, RegistrationRendition } from '../../types/renditions';
 
 const userRouter = Router();
 
@@ -21,12 +19,12 @@ userRouter.delete('/:userId', deleteUser);
 userRouter.post('/registrations', registerUser);
 userRouter.post('/registrations/confirm', confirmUserRegistration);
 
-function getAllUsers(req: Request, res: Response): Promise<void> {
+function getAllUsers(_req: Request, res: Response): Promise<void> {
   logger.info(`Attempting to get all users`);
   return pipe(
     userRepository.findAllUsers(),
-    TE.map(users => ({ users })),
-    TE.fold(handleError(res), handleOK(res)),
+    map(users => ({ users })),
+    fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )
 }
@@ -35,11 +33,9 @@ function getUserByUserId(req: Request, res: Response): Promise<void> {
   const { userId } = req.params;
   logger.info(`Attempting to get user by user id: '${userId}'`);
   return pipe(
-    UserId.decode(userId),
-    E.mapLeft(toValidationError),
-    TE.fromEither,
-    TE.chain(userRepository.findByUserId),
-    TE.fold(handleError(res), handleMaybe(res)),
+    decodeTypeT(UserId, userId),
+    chain(userRepository.findByUserId),
+    fold(handleError(res), handleMaybe(res)),
     invoke => invoke()
   )
 }
@@ -47,12 +43,10 @@ function getUserByUserId(req: Request, res: Response): Promise<void> {
 function createUser(req: Request, res: Response): Promise<void> {
   logger.info(`Attempting to create new user with email address: '${req.body.emailAddress}'`);
   return pipe(
-    NewUserRendition.decode(req.body),
-    E.mapLeft(toValidationError),
-    TE.fromEither,
-    TE.chain(userRepository.createUser),
-    TE.map(userId => ({ userId })),
-    TE.fold(handleError(res), handleOK(res)),
+    decodeTypeT(NewUserRendition, req.body),
+    chain(userRepository.createUser),
+    map(userId => ({ userId })),
+    fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )
 }
@@ -61,18 +55,16 @@ function updateUser(req: Request, res: Response): Promise<void> {
   const { userId } = req.params;
   logger.info(`Attempting to update user with user id: '${userId}'`);
   return pipe(
-    E.Do,
-    E.bind('userId', () => UserId.decode(userId)),
-    E.bind('user', () => User.decode(req.body)),
-    E.mapLeft(toValidationError),
-    E.filterOrElse(
+    Do,
+    bind('userId', () => decodeTypeT(UserId, userId)),
+    bind('user', () => decodeTypeT(User, req.body)),
+    filterOrElse(
       ({ userId, user }) => userId === user.userId,
       () => new ValidationError(`UserId in path and in body fail to match`)
     ),
-    E.map(({ user }) => user),
-    TE.fromEither,
-    TE.chain(userRepository.updateUser),
-    TE.fold(handleError(res), handleOK(res)),
+    map(({ user }) => user),
+    chain(userRepository.updateUser),
+    fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )
 }
@@ -81,12 +73,10 @@ function deleteUser(req: Request, res: Response): Promise<void> {
   const { userId } = req.params;
   logger.info(`Attempting to delete user with user id: '${userId}'`);
   return pipe(
-    UserId.decode(userId),
-    E.mapLeft(toValidationError),
-    TE.fromEither,
-    TE.chain(userRepository.deleteUser),
-    TE.map(userId => ({ userId })),
-    TE.fold(handleError(res), handleOK(res)),
+    decodeTypeT(UserId, userId),
+    chain(userRepository.deleteUser),
+    map(userId => ({ userId })),
+    fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )
 }
@@ -94,12 +84,10 @@ function deleteUser(req: Request, res: Response): Promise<void> {
 function registerUser(req: Request, res: Response): Promise<void> {
   logger.info(`Attempting to register user with email address: '${req.body.emailAddress}'`);
   return pipe(
-    RegistrationRendition.decode(req.body),
-    E.mapLeft(toValidationError),
-    TE.fromEither,
-    TE.chain(userRepository.registerUser),
-    TE.map(registrationId => ({ registrationId })),
-    TE.fold(handleError(res), handleOK(res)),
+    decodeTypeT(RegistrationRendition, req.body),
+    chain(userRepository.registerUser),
+    map(registrationId => ({ registrationId })),
+    fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )
 }
@@ -108,12 +96,10 @@ function confirmUserRegistration(req: Request, res: Response): Promise<void> {
   const { registrationId } = req.body;
   logger.info(`Attempting to confirm user registration user with registration id '${registrationId}'`);
   return pipe(
-    RegistrationId.decode(registrationId),
-    E.mapLeft(toValidationError),
-    TE.fromEither,
-    TE.chain(userRepository.confirmUserRegistration),
-    TE.map(userId => ({ userId })),
-    TE.fold(handleError(res), handleOK(res)),
+    decodeTypeT(RegistrationId, registrationId),
+    chain(userRepository.confirmUserRegistration),
+    map(userId => ({ userId })),
+    fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )
 }

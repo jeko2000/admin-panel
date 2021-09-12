@@ -1,34 +1,34 @@
-import * as E from "fp-ts/lib/Either";
-import * as TE from "fp-ts/lib/TaskEither";
 import bcrypt from 'bcrypt';
-import { Errors } from "io-ts";
+import { Either, mapLeft } from "fp-ts/lib/Either";
 import { Password, PasswordHash } from "../types/types";
+import { Type } from "io-ts";
 import { ValidationError } from "../types/errors";
-import { flow, pipe } from "fp-ts/lib/function";
+import { chain, fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
 
 const saltRounds = 10;
 
-export function toValidationError(errors: Errors): ValidationError {
-  return new ValidationError(errors.map(err => err.message).join(','));
-}
-
-export function hashPassword(plainPassword: Password): TE.TaskEither<Error, PasswordHash> {
+export function hashPassword(plainPassword: Password): TaskEither<Error, PasswordHash> {
   return pipe(
-    TE.tryCatch(
+    tryCatch(
       () => bcrypt.hash(plainPassword, saltRounds),
       e => (e instanceof Error) ? e : new Error(String(e))
     ),
-    TE.chain(flow(
-      PasswordHash.decode,
-      E.mapLeft(toValidationError),
-      TE.fromEither
-    ))
+    chain(hash => decodeTypeT(PasswordHash, hash))
   )
 }
 
-export function validatePassword(plainPassword: Password, passwordHash: PasswordHash): TE.TaskEither<Error, boolean> {
-  return TE.tryCatch(
+export function validatePassword(plainPassword: Password, passwordHash: PasswordHash): TaskEither<Error, boolean> {
+  return tryCatch(
     () => bcrypt.compare(plainPassword, passwordHash),
     e => (e instanceof Error) ? e : new Error(String(e))
   );
+}
+
+export function decodeType<A, O, I>(type: Type<A, O, I>, i: I): Either<ValidationError, A> {
+  return pipe(type.decode(i), mapLeft(errors => new ValidationError(errors.map(err => err.message).join(','))));
+}
+
+export function decodeTypeT<A, O, I>(type: Type<A, O, I>, i: I): TaskEither<ValidationError, A> {
+  return pipe(decodeType(type, i), fromEither);
 }

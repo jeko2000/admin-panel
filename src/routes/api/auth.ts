@@ -1,45 +1,42 @@
-import * as E from 'fp-ts/Either';
-import * as TE from 'fp-ts/TaskEither';
+import { LoginRendition } from '../../types/renditions';
 import { Router, Request, Response } from 'express';
+import { User } from '../../entities/user';
 import { ValidationError } from '../../types/errors';
+import { bind, chain, Do, fold, fromOption, left, right, TaskEither } from 'fp-ts/lib/TaskEither';
+import { decodeTypeT, validatePassword } from '../../util/fpUtil';
 import { handleError, handleOK } from '../../util/httpUtil';
 import { pipe } from 'fp-ts/lib/function';
-import { toValidationError, validatePassword } from '../../util/fpUtil';
 import { userRepository } from '../../repositories/userRepository';
-import { LoginRendition } from '../../types/renditions';
-import { User } from '../../entities/user';
 
 const authRouter = Router();
 authRouter.post('/login', loginUser);
 
 function loginUser(req: Request, res: Response): Promise<void> {
   return pipe(
-    LoginRendition.decode(req.body),
-    E.mapLeft(toValidationError),
-    TE.fromEither,
-    TE.chain(authenticate),
-    TE.fold(handleError(res), handleOK(res)),
+    decodeTypeT(LoginRendition, req.body),
+    chain(authenticate),
+    fold(handleError(res), handleOK(res)),
     invoke => invoke()
   )
 }
 
-function authenticate(loginRendition: LoginRendition): TE.TaskEither<Error, User> {
+function authenticate(loginRendition: LoginRendition): TaskEither<Error, User> {
   const { emailAddress } = loginRendition;
   return pipe(
-    TE.Do,
-    TE.bind('user', () => pipe(
+    Do,
+    bind('user', () => pipe(
       userRepository.findByEmailAddress(emailAddress),
-      TE.chain(TE.fromOption(
+      chain(fromOption(
         () => new ValidationError(`No such user`)
       ))
     )),
-    TE.bind('isValid', (({ user }) => validatePassword(
+    bind('isValid', (({ user }) => validatePassword(
       loginRendition.password,
       user.passwordHash))
     ),
-    TE.chain(({ user, isValid }) => isValid
-      ? TE.right(user)
-      : TE.left(new Error('Invalid password'))
+    chain(({ user, isValid }) => isValid
+      ? right(user)
+      : left(new Error('Invalid password'))
     )
   )
 }
