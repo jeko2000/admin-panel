@@ -17,6 +17,15 @@ export const RoleName = withMessage(
 );
 export type RoleName = t.TypeOf<typeof RoleName>;
 
+export const RoleNames = withMessage(
+  t.keyof({
+    user: null,
+    admin: null
+  }, 'RoleName'),
+  () => 'Invalid role name'
+);
+export type RoleNames = t.TypeOf<typeof RoleNames>;
+
 export const Role = t.type({
   roleId: RoleId,
   roleName: RoleName,

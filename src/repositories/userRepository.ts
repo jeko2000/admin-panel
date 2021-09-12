@@ -1,13 +1,12 @@
 import * as A from 'fp-ts/Array';
 import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
-import { DatabaseError, ValidationError } from '../types/errors';
 import { EmailAddress } from '../types/types';
 import { NewUserRendition, RegistrationRendition } from '../types/renditions';
 import { RegistrationId, User, UserId } from '../entities/user';
-import { dbClient, DbClient, ResultRow } from './dbClient';
+import { sqlClient, SqlClient, ResultRow } from '../clients/sqlClient';
 import { flow, pipe } from 'fp-ts/lib/function';
-import { hashPassword } from '../util/fpUtil';
+import { decodeTypeT, hashPassword } from '../util/fpUtil';
 
 export interface UserRepository {
   findAllUsers(): TE.TaskEither<Error, Array<User>>;
@@ -22,19 +21,19 @@ export interface UserRepository {
 
 class PostgresUserRepository implements UserRepository {
   constructor(
-    readonly dbClient: DbClient
+    readonly sqlClient: SqlClient
   ) { }
 
   findAllUsers(): TE.TaskEither<Error, Array<User>> {
     return pipe(
-      dbClient.query('SELECT * FROM get_all_users()'),
+      sqlClient.query('SELECT * FROM get_all_users()'),
       TE.map(resultSet => resultSet.rows),
       TE.map(flow(A.map(resultRowToMaybeUser), A.compact))
     )
   }
   findByUserId(userId: UserId): TE.TaskEither<Error, O.Option<User>> {
     return pipe(
-      dbClient.querySingleWithParams(
+      sqlClient.querySingleWithParamsO(
         'SELECT * FROM get_user_by_user_id($1)', [userId]
       ),
       TE.map(O.chain(resultRowToMaybeUser))
@@ -43,7 +42,7 @@ class PostgresUserRepository implements UserRepository {
 
   findByEmailAddress(emailAddress: EmailAddress): TE.TaskEither<Error, O.Option<User>> {
     return pipe(
-      dbClient.querySingleWithParams(
+      sqlClient.querySingleWithParamsO(
         'SELECT * FROM get_user_by_email_address($1)', [emailAddress]
       ),
       TE.map(O.chain(resultRowToMaybeUser))
@@ -54,39 +53,30 @@ class PostgresUserRepository implements UserRepository {
     const { emailAddress, password } = newUserRendition;
     return pipe(
       hashPassword(password),
-      TE.chain(passwordHash => dbClient.querySingleWithParams(
+      TE.chain(passwordHash => sqlClient.querySingleWithParams(
         'SELECT create_user($1, $2) AS user_id', [emailAddress, passwordHash]
       )),
-      TE.chain(TE.fromOption(
-        () => new DatabaseError(`Failed to collect User`),
-      )),
-      TE.map(rr => rr.user_id)
+      TE.chain(rr => decodeTypeT(UserId, rr.user_id))
     )
   }
 
   updateUser(user: User): TE.TaskEither<Error, User> {
     const { emailAddress, passwordHash, userId } = user;
     return pipe(
-      dbClient.querySingleWithParams(
+      sqlClient.querySingleWithParams(
         "UPDATE users SET email_address = $1, password_hash = $2 WHERE user_id = $3 RETURNING *",
         [emailAddress, passwordHash, userId]
       ),
-      TE.chain(TE.fromOption(
-        () => new ValidationError(`No such user found`)
-      )),
       TE.map(_ => user)
     );
   }
 
   deleteUser(userId: UserId): TE.TaskEither<Error, UserId> {
     return pipe(
-      dbClient.querySingleWithParams(
+      sqlClient.querySingleWithParams(
         "DELETE FROM users WHERE user_id = $1 RETURNING *",
         [userId]
       ),
-      TE.chain(TE.fromOption(
-        () => new ValidationError(`No such user found`)
-      )),
       TE.map(_ => userId)
     )
   }
@@ -95,38 +85,35 @@ class PostgresUserRepository implements UserRepository {
 
     return pipe(
       hashPassword(password),
-      TE.chain(passwordHash => dbClient.querySingleWithParams(
+      TE.chain(passwordHash => sqlClient.querySingleWithParams(
         "SELECT create_user_registration($1, $2) AS registration_id", [emailAddress, passwordHash]
       )),
-      TE.chain(TE.fromOption(
-        () => new ValidationError(`No such resource found`)
-      )),
-      TE.map(rr => rr.registration_id)
+      TE.chain(rr => decodeTypeT(RegistrationId, rr.registration_id))
     )
   }
 
   confirmUserRegistration(registrationId: RegistrationId): TE.TaskEither<Error, UserId> {
     return pipe(
-      dbClient.querySingleWithParams(
+      sqlClient.querySingleWithParams(
         "SELECT confirm_user_registration($1) AS user_id", [registrationId]
       ),
-      TE.chain(TE.fromOption(
-        () => new ValidationError(`No such resource found`)
-      )),
-      TE.map(rr => rr.user_id)
+      TE.chain(rr => decodeTypeT(UserId, rr.user_id))
     )
   }
 }
 
 function resultRowToMaybeUser(rr: ResultRow) {
-  const roleNames: Array<string> = rr.role_names.split(',');
-  return O.fromEither(User.decode({
-    userId: rr.user_id,
-    emailAddress: rr.email_address,
-    passwordHash: rr.password_hash,
-    roleNames,
-    createdAt: rr.created_at
-  }));
+  if (rr.role_names instanceof String) {
+    const roleNames: Array<string> = rr.role_names.split(',');
+    return O.fromEither(User.decode({
+      userId: rr.user_id,
+      emailAddress: rr.email_address,
+      passwordHash: rr.password_hash,
+      roleNames,
+      createdAt: rr.created_at
+    }));
+  }
+  return O.none;
 }
 
-export const userRepository = new PostgresUserRepository(dbClient);
+export const userRepository = new PostgresUserRepository(sqlClient);

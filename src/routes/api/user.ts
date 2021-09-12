@@ -1,4 +1,4 @@
-import logger from '../../services/logger';
+import logger from '../../clients/logger';
 import { NewUserRendition, RegistrationRendition } from '../../types/renditions';
 import { RegistrationId, User, UserId } from '../../entities/user';
 import { Router, Request, Response } from 'express';

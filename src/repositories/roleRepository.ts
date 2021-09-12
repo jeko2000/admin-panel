@@ -2,7 +2,7 @@ import * as A from 'fp-ts/Array';
 import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import { Role, RoleName } from '../entities/role';
-import { dbClient, DbClient, ResultRow } from './dbClient';
+import { sqlClient, SqlClient, ResultRow } from '../clients/sqlClient';
 import { flow, pipe } from 'fp-ts/lib/function';
 
 export interface RoleRepository {
@@ -12,27 +12,27 @@ export interface RoleRepository {
 
 class DefaultRoleRepository implements RoleRepository {
   constructor(
-    readonly dbClient: DbClient
+    readonly sqlClient: SqlClient
   ) { }
 
   findAllRoles(): TE.TaskEither<Error, Array<Role>> {
     return pipe(
-      dbClient.query('SELECT * FROM roles'),
+      sqlClient.query('SELECT * FROM roles'),
       TE.map(resultSet => resultSet.rows),
-      TE.map(flow(A.map(resultRowToMaybeRole), A.compact))
+      TE.map(flow(A.map(resultRowToOptionRole), A.compact))
     )
   }
   findRoleByRoleName(roleName: RoleName): TE.TaskEither<Error, O.Option<Role>> {
     return pipe(
-      dbClient.querySingleWithParams(
+      sqlClient.querySingleWithParamsO(
         'SELECT * FROM roles WHERE role_name = $1', [roleName]
       ),
-      TE.map(O.chain(resultRowToMaybeRole))
+      TE.map(O.chain(resultRowToOptionRole))
     )
   }
 }
 
-function resultRowToMaybeRole(rr: ResultRow) {
+function resultRowToOptionRole(rr: ResultRow): O.Option<Role> {
   return O.fromEither(Role.decode({
     roleId: rr.role_id,
     roleName: rr.role_name,
@@ -41,4 +41,4 @@ function resultRowToMaybeRole(rr: ResultRow) {
   }));
 }
 
-export const roleRepository = new DefaultRoleRepository(dbClient);
+export const roleRepository = new DefaultRoleRepository(sqlClient);

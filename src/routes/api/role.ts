@@ -1,4 +1,4 @@
-import logger from '../../services/logger';
+import logger from '../../clients/logger';
 import { RoleName } from '../../entities/role';
 import { Router, Request, Response } from 'express';
 import { chain, fold, map } from 'fp-ts/TaskEither'
