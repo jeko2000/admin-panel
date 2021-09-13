@@ -86,7 +86,7 @@ class PostgresSqlClient implements SqlClient {
 
 const DEFAULT_DATABASE_NAME = 'admin_panel';
 
-const database = config.getOrElse('db.database', DEFAULT_DATABASE_NAME);
+const database = config.getStringOrElse('db.database', DEFAULT_DATABASE_NAME);
 
 export const sqlClient = new PostgresSqlClient(new pg.Pool({
   database

@@ -1,4 +1,4 @@
 * Admin panel server
   This is a small, self-contained express server application for
-  experimentation with typed function programming via [[https://github.com/gcanti][Giulio Canti]]'s
+  experimentation with typed functional programming via [[https://github.com/gcanti][Giulio Canti]]'s
   exceptional [[https://github.com/gcanti/fp-ts][fp-ts]] Typescript library.

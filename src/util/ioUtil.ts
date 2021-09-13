@@ -40,7 +40,18 @@ export const readTextFileSync: (path: string) => E.Either<Error, string> = flow(
   E.chain(bufferToString)
 )
 
-export function stringToInt(str: string): O.Option<number> {
+export function stringToNumber(str: string): O.Option<number> {
   const num = Number(str);
   return isNaN(num) ? O.none : O.some(num);
+}
+
+export function stringToBoolean(str: string): O.Option<boolean> {
+  const lower = str.toLocaleLowerCase();
+  if (lower === 'true') {
+    return O.some(true);
+  }
+  if (lower === 'false') {
+    return O.some(false);
+  }
+  return O.none;
 }

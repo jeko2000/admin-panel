@@ -25,7 +25,7 @@ const transports = [
   })
 ]
 
-const level = config.getOrElse('logger.level', DEFAULT_LOGGER_LEVER);
+const level = config.getStringOrElse('logger.level', DEFAULT_LOGGER_LEVER);
 
 export const logger = winston.createLogger({
   level,
