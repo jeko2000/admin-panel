@@ -4,7 +4,7 @@ import { Router, Request, Response } from 'express';
 import { chain, fold, map } from 'fp-ts/TaskEither'
 import { decodeTypeT } from '../../util/fpUtil';
 import { handleError, handleMaybe, handleOK } from '../../util/httpUtil';
-import { pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/function';
 import { roleRepository } from '../../repositories/roleRepository';
 
 const roleRouter = Router();

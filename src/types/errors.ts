@@ -9,3 +9,9 @@ export class DatabaseError extends Error {
     super(`Database error: ${message}`);
   }
 }
+
+export class RenderError extends Error {
+  constructor(message: string) {
+    super(`Render error: ${message}`);
+  }
+}

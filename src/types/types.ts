@@ -1,7 +1,7 @@
 import * as c from './codecs';
 import * as t from 'io-ts';
 import * as tt from 'io-ts-types';
-import { withMessage } from 'io-ts-types/lib/withMessage'
+import { withMessage } from 'io-ts-types/withMessage'
 
 export const NumericId = withMessage(
   t.union([c.PositiveInt, tt.IntFromString], 'NumericId'),

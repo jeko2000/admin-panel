@@ -1,9 +1,9 @@
-import * as O from 'fp-ts/lib/Option';
-import * as T from 'fp-ts/lib/Task';
+import * as O from 'fp-ts/Option';
+import * as T from 'fp-ts/Task';
 import StatusCodes from 'http-status-codes';
 import { Response } from 'express';
 import { ValidationError } from '../types/errors';
-import { pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/function';
 
 const { BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK } = StatusCodes;
 

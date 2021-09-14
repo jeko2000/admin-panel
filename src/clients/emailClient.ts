@@ -2,8 +2,8 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { EmailMessage } from '../types/models';
 import { config } from './config';
 import { createTransport, Transporter } from 'nodemailer';
-import { map, TaskEither, tryCatch } from 'fp-ts/lib/TaskEither';
-import { pipe } from 'fp-ts/lib/function';
+import { map, TaskEither, tryCatch } from 'fp-ts/TaskEither';
+import { pipe } from 'fp-ts/function';
 
 export interface EmailClient {
   sendMail(message: EmailMessage): TaskEither<Error, string>

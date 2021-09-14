@@ -2,7 +2,7 @@ import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 import * as R from 'fp-ts/Record';
 import path from 'path';
-import { pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/function';
 import { readTextFileSync, stringToBoolean, stringToNumber } from '../util/ioUtil';
 
 const DEFAULT_CONFIG_STORE_PATH = path.resolve(__dirname, '..', '..', 'config/config.json');

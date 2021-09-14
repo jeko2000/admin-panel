@@ -5,7 +5,7 @@ import { EmailAddress } from '../types/types';
 import { NewUserRendition, RegistrationRendition } from '../types/renditions';
 import { RegistrationId, User, UserId } from '../entities/user';
 import { sqlClient, SqlClient, ResultRow } from '../clients/sqlClient';
-import { flow, pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/function';
 import { decodeTypeT, hashPassword } from '../util/fpUtil';
 
 export interface UserRepository {

@@ -1,10 +1,10 @@
 import bcrypt from 'bcrypt';
-import { Either, mapLeft } from "fp-ts/lib/Either";
+import { Either, mapLeft } from "fp-ts/Either";
 import { Password, PasswordHash } from "../types/types";
 import { Type } from "io-ts";
 import { ValidationError } from "../types/errors";
-import { chain, fromEither, TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
-import { pipe } from "fp-ts/lib/function";
+import { chain, fromEither, TaskEither, tryCatch } from "fp-ts/TaskEither";
+import { pipe } from "fp-ts/function";
 
 const saltRounds = 10;
 

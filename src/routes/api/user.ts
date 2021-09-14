@@ -4,9 +4,9 @@ import { RegistrationId, User, UserId } from '../../entities/user';
 import { Router, Request, Response } from 'express';
 import { ValidationError } from '../../types/errors';
 import { decodeTypeT } from '../../util/fpUtil';
-import { bind, chain, Do, filterOrElse, fold, map } from 'fp-ts/lib/TaskEither';
+import { bind, chain, Do, filterOrElse, fold, map } from 'fp-ts/TaskEither';
 import { handleError, handleMaybe, handleOK } from '../../util/httpUtil';
-import { pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/function';
 import { userRepository } from '../../repositories/userRepository';
 
 const userRouter = Router();

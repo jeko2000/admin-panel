@@ -3,7 +3,7 @@ import * as O from 'fp-ts/Option';
 import * as TE from 'fp-ts/TaskEither';
 import { Role, RoleName } from '../entities/role';
 import { sqlClient, SqlClient, ResultRow } from '../clients/sqlClient';
-import { flow, pipe } from 'fp-ts/lib/function';
+import { flow, pipe } from 'fp-ts/function';
 
 export interface RoleRepository {
   findAllRoles(): TE.TaskEither<Error, Array<Role>>

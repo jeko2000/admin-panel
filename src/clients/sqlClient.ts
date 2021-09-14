@@ -3,7 +3,7 @@ import { DatabaseError } from '../types/errors';
 import { chain, map, left, right, TaskEither, tryCatch } from 'fp-ts/TaskEither';
 import { none, Option, some } from 'fp-ts/Option';
 import { config } from './config';
-import { pipe } from 'fp-ts/lib/function';
+import { pipe } from 'fp-ts/function';
 
 export type SqlDatum = boolean | number | string | Date
 

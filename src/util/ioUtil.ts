@@ -1,7 +1,7 @@
-import { flow } from 'fp-ts/lib/function';
-import { TaskEither, tryCatch, chain, fromEither } from 'fp-ts/lib/TaskEither';
-import * as E from 'fp-ts/lib/Either';
-import * as O from 'fp-ts/lib/Option';
+import { flow } from 'fp-ts/function';
+import { TaskEither, tryCatch, chain, fromEither } from 'fp-ts/TaskEither';
+import * as E from 'fp-ts/Either';
+import * as O from 'fp-ts/Option';
 import fs from 'fs';
 
 export function bufferToString(buffer: Buffer): E.Either<Error, string> {
